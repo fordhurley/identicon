@@ -16,16 +16,14 @@ func main() {
 	io.Copy(h, os.Stdin)
 	hash := h.Sum(nil)
 
-	size := 256
-
 	palette := color.Palette{
-		color.RGBA{255, 0, 0, 255},
-		color.RGBA{255, 255, 0, 255},
-		color.RGBA{0, 0, 255, 255},
-		color.RGBA{255, 255, 255, 255},
+		color.RGBA{237, 243, 248, 255},
+		color.RGBA{70, 130, 180, 255},
+		color.RGBA{49, 90, 125, 255},
+		color.RGBA{21, 38, 53, 255},
 	}
 
-	img := identicon.New(hash, size, palette)
+	img := identicon.New(hash, 5, 36, palette)
 	err := png.Encode(os.Stdout, img)
 	if err != nil {
 		log.Fatal(err)

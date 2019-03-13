@@ -6,29 +6,29 @@ import (
 	"image/draw"
 )
 
-// New generates a new identicon image. numPixels is the side length of the
-// square image in pixels.
-func New(hash []byte, numPixels int, palette color.Palette) image.Image {
-	pixelBytes := byteRing{bytes: hash}
+// New generates a new identicon image. gridSize is the number of grid cells
+// horizontally and vertically. scale multiplies the gridSize to size of the
+// image in pixels.
+func New(hash []byte, gridSize int, scale int, palette color.Palette) image.Image {
+	ring := byteRing{bytes: hash}
 
-	rect := image.Rect(0, 0, numPixels, numPixels)
-	img := image.NewPaletted(rect, palette)
+	img := image.NewRGBA(image.Rect(0, 0, gridSize*scale, gridSize*scale))
 
-	for _, cell := range grid(rect, pixelBytes.len()) {
-		src := image.NewUniform(byteColor(pixelBytes.nextN(3)))
-		draw.Draw(img, cell, src, image.ZP, draw.Src)
+	for x := 0; x < gridSize/2+gridSize%2; x++ {
+		for y := 0; y < gridSize; y++ {
+			c := int(ring.next()) % len(palette)
+			color := image.NewUniform(palette[c])
+
+			rect := image.Rect(x*scale, y*scale, (x+1)*scale, (y+1)*scale)
+			draw.Draw(img, rect, color, image.ZP, draw.Src)
+
+			// Mirror horizontally:
+			rect = image.Rect((gridSize-x-1)*scale, y*scale, (gridSize-x)*scale, (y+1)*scale)
+			draw.Draw(img, rect, color, image.ZP, draw.Src)
+		}
 	}
 
 	return img
-}
-
-func byteColor(bytes []byte) color.Color {
-	return color.RGBA{
-		R: uint8(bytes[0]),
-		G: uint8(bytes[1]),
-		B: uint8(bytes[2]),
-		A: 255,
-	}
 }
 
 type byteRing struct {
