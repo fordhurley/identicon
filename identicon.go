@@ -8,7 +8,7 @@ import (
 
 // New generates a new identicon image. numPixels is the side length of the
 // square image in pixels.
-func New(hash []byte, numPixels int, palette color.Palette) (image.Image, error) {
+func New(hash []byte, numPixels int, palette color.Palette) image.Image {
 	pixelBytes := byteRing{bytes: hash}
 
 	rect := image.Rect(0, 0, numPixels, numPixels)
@@ -19,7 +19,7 @@ func New(hash []byte, numPixels int, palette color.Palette) (image.Image, error)
 		draw.Draw(img, cell, src, image.ZP, draw.Src)
 	}
 
-	return img, nil
+	return img
 }
 
 func byteColor(bytes []byte) color.Color {

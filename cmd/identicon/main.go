@@ -25,12 +25,8 @@ func main() {
 		color.RGBA{255, 255, 255, 255},
 	}
 
-	img, err := identicon.New(hash, size, palette)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	err = png.Encode(os.Stdout, img)
+	img := identicon.New(hash, size, palette)
+	err := png.Encode(os.Stdout, img)
 	if err != nil {
 		log.Fatal(err)
 	}
