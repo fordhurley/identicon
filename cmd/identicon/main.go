@@ -1,10 +1,8 @@
 package main
 
 import (
-	"crypto/sha1"
 	"image/color"
 	"image/png"
-	"io"
 	"log"
 	"os"
 
@@ -12,14 +10,12 @@ import (
 )
 
 func main() {
-	h := sha1.New()
-	io.Copy(h, os.Stdin)
-	hash := h.Sum(nil)
-
+	gridSize := 5
+	scale := 32
 	fg := color.RGBA{49, 90, 125, 255}
 	bg := color.RGBA{237, 243, 248, 255}
 
-	img := identicon.New(hash, 5, 32, fg, bg)
+	img := identicon.New(os.Stdin, gridSize, scale, fg, bg)
 	err := png.Encode(os.Stdout, img)
 	if err != nil {
 		log.Fatal(err)
