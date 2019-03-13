@@ -10,6 +10,7 @@ import (
 )
 
 func main() {
+	// TODO: args
 	gridSize := 5
 	scale := 32
 	fgs := rainbow

@@ -2,7 +2,7 @@ package identicon
 
 import (
 	"bytes"
-	"crypto/sha1"
+	"crypto/sha256"
 	"image"
 	"image/color"
 	"image/draw"
@@ -13,7 +13,7 @@ import (
 // horizontally and vertically. scale multiplies the gridSize to size the image
 // in pixels. The final image will be [gridSize*scale x gridSize*scale]
 func New(r io.Reader, gridSize int, scale int, fgs []color.Color, bg color.Color) image.Image {
-	hash := sha1.New()
+	hash := sha256.New()
 	_, err := io.Copy(hash, r)
 	if err != nil {
 		panic(err)
@@ -29,7 +29,7 @@ func New(r io.Reader, gridSize int, scale int, fgs []color.Color, bg color.Color
 	maxX := gridSize/2 + gridSize%2
 	for x := 0; x < maxX; x++ {
 		for y := 0; y < gridSize; y++ {
-
+			// 50% chance of picking the background color:
 			color := bg
 			if b, _ := bits.read(); b {
 				fgIndex, _ := bits.readInt(uint(len(fgs)))
