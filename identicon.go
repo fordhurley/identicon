@@ -20,7 +20,7 @@ func New(r io.Reader, gridSize int, scale int, fgs []color.Color, bg color.Color
 	}
 	byteReader := bytes.NewReader(hash.Sum(nil))
 
-	bits := bitReader{r: byteReader}
+	colors := newColorSource(byteReader, fgs, bg)
 
 	img := image.NewRGBA(image.Rect(0, 0, gridSize*scale, gridSize*scale))
 
@@ -29,14 +29,7 @@ func New(r io.Reader, gridSize int, scale int, fgs []color.Color, bg color.Color
 	maxX := gridSize/2 + gridSize%2
 	for x := 0; x < maxX; x++ {
 		for y := 0; y < gridSize; y++ {
-			// 50% chance of picking the background color:
-			color := bg
-			if b, _ := bits.read(); b {
-				fgIndex, _ := bits.readInt(uint(len(fgs)))
-				color = fgs[fgIndex]
-			}
-
-			src := image.NewUniform(color)
+			src := image.NewUniform(colors.next())
 
 			// Draw this on the left side:
 			rect := image.Rect(x*scale, y*scale, (x+1)*scale, (y+1)*scale)
@@ -49,6 +42,29 @@ func New(r io.Reader, gridSize int, scale int, fgs []color.Color, bg color.Color
 	}
 
 	return img
+}
+
+type colorSource struct {
+	fgs []color.Color
+	bg  color.Color
+	br  bitReader
+}
+
+func newColorSource(r io.ByteReader, fgs []color.Color, bg color.Color) *colorSource {
+	return &colorSource{
+		fgs: fgs,
+		bg:  bg,
+		br:  bitReader{r: r},
+	}
+}
+
+func (cs *colorSource) next() color.Color {
+	// 50% chance of picking the background color:
+	if b, _ := cs.br.read(); b {
+		return cs.bg
+	}
+	fgIndex, _ := cs.br.readInt(uint(len(cs.fgs)))
+	return cs.fgs[fgIndex]
 }
 
 type bitReader struct {
