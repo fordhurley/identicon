@@ -1,7 +1,6 @@
 package identicon
 
 import (
-	"bytes"
 	"crypto/sha256"
 	"image"
 	"image/color"
@@ -18,9 +17,8 @@ func New(r io.Reader, gridSize int, scale int, fgs []color.Color, bg color.Color
 	if err != nil {
 		panic(err)
 	}
-	byteReader := bytes.NewReader(hash.Sum(nil))
 
-	colors := newColorSource(byteReader, fgs, bg)
+	source := newColorSource(hash.Sum(nil), fgs, bg)
 
 	img := image.NewRGBA(image.Rect(0, 0, gridSize*scale, gridSize*scale))
 
@@ -29,15 +27,15 @@ func New(r io.Reader, gridSize int, scale int, fgs []color.Color, bg color.Color
 	maxX := gridSize/2 + gridSize%2
 	for x := 0; x < maxX; x++ {
 		for y := 0; y < gridSize; y++ {
-			src := image.NewUniform(colors.next())
+			c := image.NewUniform(source.nextColor())
 
 			// Draw this on the left side:
 			rect := image.Rect(x*scale, y*scale, (x+1)*scale, (y+1)*scale)
-			draw.Draw(img, rect, src, image.ZP, draw.Src)
+			draw.Draw(img, rect, c, image.ZP, draw.Src)
 
 			// Mirror horizontally to the right side:
 			rect = image.Rect((gridSize-x-1)*scale, y*scale, (gridSize-x)*scale, (y+1)*scale)
-			draw.Draw(img, rect, src, image.ZP, draw.Src)
+			draw.Draw(img, rect, c, image.ZP, draw.Src)
 		}
 	}
 
@@ -45,70 +43,59 @@ func New(r io.Reader, gridSize int, scale int, fgs []color.Color, bg color.Color
 }
 
 type colorSource struct {
+	bitSource
 	fgs []color.Color
 	bg  color.Color
-	br  bitReader
 }
 
-func newColorSource(r io.ByteReader, fgs []color.Color, bg color.Color) *colorSource {
+func newColorSource(bytes []byte, fgs []color.Color, bg color.Color) *colorSource {
 	return &colorSource{
-		fgs: fgs,
-		bg:  bg,
-		br:  bitReader{r: r},
+		bitSource: bitSource{bytes: bytes},
+		fgs:       fgs,
+		bg:        bg,
 	}
 }
 
-func (cs *colorSource) next() color.Color {
+func (cs *colorSource) nextColor() color.Color {
 	// 50% chance of picking the background color:
-	if b, _ := cs.br.read(); b {
+	if cs.nextBool() {
 		return cs.bg
 	}
-	fgIndex, _ := cs.br.readInt(uint(len(cs.fgs)))
+	fgIndex := cs.nextUint(uint(len(cs.fgs)))
 	return cs.fgs[fgIndex]
 }
 
-type bitReader struct {
-	r io.ByteReader
+type bitSource struct {
+	bytes []byte
 
-	hasByte  bool
-	lastByte byte
-	bitIndex uint
+	byteIndex int
+	bitIndex  uint
 }
 
-func (br *bitReader) read() (bool, error) {
-	if !br.hasByte {
-		b, err := br.r.ReadByte()
-		if err != nil {
-			return false, err
+func (s *bitSource) nextBool() bool {
+	b := s.bytes[s.byteIndex]
+	bit := b >> s.bitIndex & 1
+
+	s.bitIndex++
+	if s.bitIndex == 8 {
+		s.bitIndex = 0
+		s.byteIndex++
+		if s.byteIndex == len(s.bytes) {
+			s.byteIndex = 0
 		}
-		br.hasByte = true
-		br.lastByte = b
-		br.bitIndex = 0
 	}
 
-	b := br.lastByte
-	bit := b >> br.bitIndex & 1
-	br.bitIndex++
-	if br.bitIndex == 8 {
-		br.hasByte = false
-	}
-
-	return bit == 1, nil
+	return bit == 1
 }
 
 // readInt reads just enough bits to build an integer between 0 and n
 // (exclusive), and reconstructs it as an uint.
-func (br *bitReader) readInt(n uint) (uint, error) {
+func (s *bitSource) nextUint(n uint) uint {
 	var x uint
 	var i uint
 
-	m := n - 1
-	for m > 0 {
-		m = m >> 1
-		b, err := br.read()
-		if err != nil {
-			return 0, err
-		}
+	for m := n - 1; m > 0; m = m >> 1 {
+		b := s.nextBool()
 		if b {
 			x |= 1 << i
 		}
@@ -116,7 +103,7 @@ func (br *bitReader) readInt(n uint) (uint, error) {
 	}
 
 	if x >= n {
-		return n - 1, nil
+		return n - 1
 	}
-	return x, nil
+	return x
 }
