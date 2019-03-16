@@ -8,7 +8,7 @@ import (
 	"io"
 )
 
-// New generates a new identicon image. gridSize is the number of grid cells
+// New generates an identicon image. gridSize is the number of grid cells
 // horizontally and vertically. scale multiplies the gridSize to size the image
 // in pixels. The final image will be [gridSize*scale x gridSize*scale]
 func New(r io.Reader, gridSize int, scale int, fgs []color.Color, bg color.Color) image.Image {
@@ -18,7 +18,7 @@ func New(r io.Reader, gridSize int, scale int, fgs []color.Color, bg color.Color
 		panic(err)
 	}
 
-	source := newColorSource(hash.Sum(nil), fgs, bg)
+	source := NewColorSource(hash.Sum(nil), fgs, color.Palette{bg})
 
 	img := image.NewRGBA(image.Rect(0, 0, gridSize*scale, gridSize*scale))
 
@@ -27,7 +27,7 @@ func New(r io.Reader, gridSize int, scale int, fgs []color.Color, bg color.Color
 	maxX := gridSize/2 + gridSize%2
 	for x := 0; x < maxX; x++ {
 		for y := 0; y < gridSize; y++ {
-			c := image.NewUniform(source.nextColor())
+			c := image.NewUniform(source.NextColor())
 
 			// Draw this on the left side:
 			rect := image.Rect(x*scale, y*scale, (x+1)*scale, (y+1)*scale)
@@ -42,39 +42,55 @@ func New(r io.Reader, gridSize int, scale int, fgs []color.Color, bg color.Color
 	return img
 }
 
-type colorSource struct {
-	bitSource
-	fgs []color.Color
-	bg  color.Color
+// ColorSource uses a BitSource to determine colors for the identicon. Colors
+// are chosen from the available palettes.
+type ColorSource struct {
+	BitSource
+	palettes []color.Palette
 }
 
-func newColorSource(bytes []byte, fgs []color.Color, bg color.Color) *colorSource {
-	return &colorSource{
-		bitSource: bitSource{bytes: bytes},
-		fgs:       fgs,
-		bg:        bg,
+// NewColorSource construct a ColorSource.
+func NewColorSource(bytes []byte, palettes ...color.Palette) *ColorSource {
+	return &ColorSource{
+		BitSource: BitSource{bytes: bytes},
+		palettes:  palettes,
 	}
 }
 
-func (cs *colorSource) nextColor() color.Color {
-	// 50% chance of picking the background color:
-	if cs.nextBool() {
-		return cs.bg
-	}
-	fgIndex := cs.nextUint(uint(len(cs.fgs)))
-	return cs.fgs[fgIndex]
+// NextColor chooses a color based on the BitSource, first selecting a palette
+// uniformly from the available palettes, then selecting uniformly from the
+// colors in that palette.
+func (cs *ColorSource) NextColor() color.Color {
+	index := cs.NextUint(uint(len(cs.palettes)))
+	palette := cs.palettes[index]
+	index = cs.NextUint(uint(len(palette)))
+	return palette[index]
 }
 
-type bitSource struct {
-	bytes []byte
-
+// BitSource uses a slice of bytes to produce bits for determining features of
+// the identicon. The methods provided consume bytes as conservatively as
+// possible. If the bytes are exhausted, it will reset and begin consuming bytes
+// from the beginning of the slice again.
+type BitSource struct {
+	bytes     []byte
 	byteIndex int
 	bitIndex  uint
 }
 
-func (s *bitSource) nextBool() bool {
+// NewBitSource constructs a BitSource drawing from bytes. Panics if
+// len(bytes) < 1.
+func NewBitSource(bytes []byte) *BitSource {
+	if len(bytes) < 1 {
+		panic("identicon: not enough bytes")
+	}
+	return &BitSource{bytes: bytes}
+}
+
+// NextBit consumes a single bit.
+func (s *BitSource) NextBit() uint {
 	b := s.bytes[s.byteIndex]
-	bit := b >> s.bitIndex & 1
+	shift := 7 - s.bitIndex // so that we start from MSB
+	bit := b >> shift & 1
 
 	s.bitIndex++
 	if s.bitIndex == 8 {
@@ -85,25 +101,30 @@ func (s *bitSource) nextBool() bool {
 		}
 	}
 
-	return bit == 1
+	return uint(bit)
 }
 
-// readInt reads just enough bits to build an integer between 0 and n
-// (exclusive), and reconstructs it as an uint.
-func (s *bitSource) nextUint(n uint) uint {
-	var x uint
-	var i uint
+// NextBool consumes the next bit and returns it as a bool.
+func (s *BitSource) NextBool() bool {
+	return s.NextBit() == 1
+}
 
+// NextUint consumes just enough bits to build an integer between 0 and n
+// (exclusive), and reconstructs it as a uint.
+func (s *BitSource) NextUint(n uint) uint {
+	// Count the number of bits needed:
+	nBits := 0
 	for m := n - 1; m > 0; m = m >> 1 {
-		b := s.nextBool()
-		if b {
-			x |= 1 << i
-		}
-		i++
+		nBits++
 	}
 
-	if x >= n {
-		return n - 1
+	var x uint
+	for shift := nBits - 1; shift >= 0; shift-- {
+		x |= s.NextBit() << uint(shift)
+	}
+
+	if x > n-1 {
+		x = n - 1
 	}
 	return x
 }
