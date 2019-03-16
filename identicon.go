@@ -10,14 +10,16 @@ import (
 // New generates an identicon image. gridSize is the number of grid cells
 // horizontally and vertically. scale multiplies the gridSize to size the image
 // in pixels. The final image will be [gridSize*scale x gridSize*scale]
-func New(input string, gridSize int, scale int, palettes []color.Palette) image.Image {
+func New(input string, gridSize int, scale int, theme Theme) image.Image {
 	h := sha256.New()
 	h.Write([]byte(input))
 	hash := h.Sum(nil)
 
-	source := ColorSource{
-		BitSource: BitSource{bytes: hash},
-		palettes:  palettes,
+	bitSource := BitSource{bytes: hash}
+
+	colorSource := ColorSource{
+		BitSource: bitSource,
+		Palettes:  theme[bitSource.NextUint(uint(len(theme)))],
 	}
 
 	img := image.NewRGBA(image.Rect(0, 0, gridSize*scale, gridSize*scale))
@@ -27,7 +29,7 @@ func New(input string, gridSize int, scale int, palettes []color.Palette) image.
 	maxX := gridSize/2 + gridSize%2
 	for x := 0; x < maxX; x++ {
 		for y := 0; y < gridSize; y++ {
-			c := image.NewUniform(source.NextColor())
+			c := image.NewUniform(colorSource.NextColor())
 
 			// Draw this on the left side:
 			rect := image.Rect(x*scale, y*scale, (x+1)*scale, (y+1)*scale)
@@ -42,19 +44,22 @@ func New(input string, gridSize int, scale int, palettes []color.Palette) image.
 	return img
 }
 
+// A Theme is a set of sets of color palettes.
+type Theme [][]color.Palette
+
 // ColorSource uses a BitSource to determine colors for the identicon. Colors
 // are chosen from the available palettes.
 type ColorSource struct {
 	BitSource
-	palettes []color.Palette
+	Palettes []color.Palette
 }
 
 // NextColor chooses a color based on the BitSource, first selecting a palette
 // uniformly from the available palettes, then selecting uniformly from the
 // colors in that palette.
 func (cs *ColorSource) NextColor() color.Color {
-	index := cs.NextUint(uint(len(cs.palettes)))
-	palette := cs.palettes[index]
+	index := cs.NextUint(uint(len(cs.Palettes)))
+	palette := cs.Palettes[index]
 	index = cs.NextUint(uint(len(palette)))
 	return palette[index]
 }

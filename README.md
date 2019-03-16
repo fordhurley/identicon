@@ -4,3 +4,5 @@ Experiments with [identicon](https://en.wikipedia.org/wiki/Identicon) generation
 
 <img src="examples/cool-1.png" width="80"> <img src="examples/cool-2.png" width="80"> <img src="examples/cool-3.png" width="80"> <img src="examples/cool-4.png" width="80"> <img src="examples/cool-5.png" width="80"> <img src="examples/cool-6.png" width="80"> <img src="examples/cool-7.png" width="80"> <img src="examples/cool-8.png" width="80"> <img src="examples/cool-9.png" width="80"> 
 
+<img src="examples/solid-1.png" width="80"> <img src="examples/solid-2.png" width="80"> <img src="examples/solid-3.png" width="80"> <img src="examples/solid-4.png" width="80"> <img src="examples/solid-5.png" width="80"> <img src="examples/solid-6.png" width="80"> <img src="examples/solid-7.png" width="80"> <img src="examples/solid-8.png" width="80"> <img src="examples/solid-9.png" width="80"> 
+

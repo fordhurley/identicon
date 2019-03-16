@@ -7,7 +7,7 @@ go build ./cmd/identicon/
 
 readme=README.md
 cmd="./identicon"
-themes="rainbow cool"
+themes="rainbow cool solid"
 
 printf "Experiments with [identicon](https://en.wikipedia.org/wiki/Identicon) generation.\n\n" > $readme
 

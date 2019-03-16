@@ -44,27 +44,57 @@ func main() {
 	}
 }
 
-var themes = map[string][]color.Palette{
-	"cool": []color.Palette{
+var themes = map[string]identicon.Theme{
+	"cool": {
 		{
-			color.RGBA{50, 178, 255, 255},
-			color.RGBA{163, 172, 177, 255},
-			color.RGBA{15, 15, 15, 255},
-		},
-		{
-			color.RGBA{240, 240, 240, 255},
+			{
+				color.RGBA{240, 240, 240, 255},
+				color.RGBA{163, 172, 177, 255},
+			},
+			{
+				color.RGBA{50, 178, 255, 255},
+				color.RGBA{40, 40, 40, 255},
+			},
 		},
 	},
-	"rainbow": []color.Palette{
+	"rainbow": {
 		{
-			color.RGBA{170, 255, 0, 255},
-			color.RGBA{255, 170, 0, 255},
-			color.RGBA{255, 0, 170, 255},
-			color.RGBA{170, 0, 255, 255},
-			color.RGBA{0, 170, 255, 255},
+			{
+				color.RGBA{170, 255, 0, 255},
+				color.RGBA{255, 170, 0, 255},
+				color.RGBA{255, 0, 170, 255},
+				color.RGBA{170, 0, 255, 255},
+				color.RGBA{0, 170, 255, 255},
+			},
+			{
+				color.RGBA{255, 255, 255, 255},
+			},
+		},
+	},
+	"solid": {
+		{
+			{color.RGBA{204, 76, 81, 255}},
+			{color.RGBA{240, 240, 240, 255}},
 		},
 		{
-			color.RGBA{255, 255, 255, 255},
+			{color.RGBA{121, 134, 203, 255}},
+			{color.RGBA{240, 240, 240, 255}},
+		},
+		{
+			{color.RGBA{100, 181, 246, 255}},
+			{color.RGBA{240, 240, 240, 255}},
+		},
+		{
+			{color.RGBA{255, 213, 79, 255}},
+			{color.RGBA{240, 240, 240, 255}},
+		},
+		{
+			{color.RGBA{129, 199, 132, 255}},
+			{color.RGBA{240, 240, 240, 255}},
+		},
+		{
+			{color.RGBA{240, 98, 146, 255}},
+			{color.RGBA{240, 240, 240, 255}},
 		},
 	},
 }
