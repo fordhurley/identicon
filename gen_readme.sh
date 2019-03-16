@@ -3,9 +3,10 @@
 set -o errexit
 set -o nounset
 
-readme=README.md
+go build ./cmd/identicon/
 
-cmd="go run cmd/identicon/main.go"
+readme=README.md
+cmd="./identicon"
 themes="rainbow cool"
 
 printf "Experiments with [identicon](https://en.wikipedia.org/wiki/Identicon) generation.\n\n" > $readme
