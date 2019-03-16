@@ -10,7 +10,7 @@ import (
 // New generates an identicon image. gridSize is the number of grid cells
 // horizontally and vertically. scale multiplies the gridSize to size the image
 // in pixels. The final image will be [gridSize*scale x gridSize*scale]
-func New(input string, gridSize int, scale int, theme Theme) image.Image {
+func New(input string, theme Theme, gridSize int, scale int) image.Image {
 	h := sha256.New()
 	h.Write([]byte(input))
 	hash := h.Sum(nil)

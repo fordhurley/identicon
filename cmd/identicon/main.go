@@ -36,7 +36,7 @@ func main() {
 		log.Fatal("invalid theme name:", themeName)
 	}
 
-	img := identicon.New(input, gridSize, scale, theme)
+	img := identicon.New(input, theme, gridSize, scale)
 
 	err := png.Encode(os.Stdout, img)
 	if err != nil {
