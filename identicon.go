@@ -11,14 +11,17 @@ import (
 // New generates an identicon image. gridSize is the number of grid cells
 // horizontally and vertically. scale multiplies the gridSize to size the image
 // in pixels. The final image will be [gridSize*scale x gridSize*scale]
-func New(r io.Reader, gridSize int, scale int, fgs []color.Color, bg color.Color) image.Image {
+func New(r io.Reader, gridSize int, scale int, palettes []color.Palette) image.Image {
 	hash := sha256.New()
 	_, err := io.Copy(hash, r)
 	if err != nil {
 		panic(err)
 	}
 
-	source := NewColorSource(hash.Sum(nil), fgs, color.Palette{bg})
+	source := ColorSource{
+		BitSource: BitSource{bytes: hash.Sum(nil)},
+		palettes:  palettes,
+	}
 
 	img := image.NewRGBA(image.Rect(0, 0, gridSize*scale, gridSize*scale))
 
@@ -47,14 +50,6 @@ func New(r io.Reader, gridSize int, scale int, fgs []color.Color, bg color.Color
 type ColorSource struct {
 	BitSource
 	palettes []color.Palette
-}
-
-// NewColorSource construct a ColorSource.
-func NewColorSource(bytes []byte, palettes ...color.Palette) *ColorSource {
-	return &ColorSource{
-		BitSource: BitSource{bytes: bytes},
-		palettes:  palettes,
-	}
 }
 
 // NextColor chooses a color based on the BitSource, first selecting a palette
