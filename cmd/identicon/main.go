@@ -14,9 +14,13 @@ import (
 func main() {
 	var input string
 	var themeName string
+	var gridSize int
+	var scale int
 
 	flag.StringVar(&input, "input", "-", "input string (- to read from stdin)")
 	flag.StringVar(&themeName, "theme", "rainbow", "select the color theme")
+	flag.IntVar(&gridSize, "grid", 5, "number of grid elements horizontally and vertically")
+	flag.IntVar(&scale, "scale", 32, "pixels per grid element")
 	flag.Parse()
 
 	if input == "-" {
@@ -32,10 +36,8 @@ func main() {
 		log.Fatal("invalid theme name:", themeName)
 	}
 
-	gridSize := 5
-	scale := 32
-
 	img := identicon.New(input, gridSize, scale, theme)
+
 	err := png.Encode(os.Stdout, img)
 	if err != nil {
 		log.Fatal(err)
