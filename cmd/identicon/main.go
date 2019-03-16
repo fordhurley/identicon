@@ -4,6 +4,7 @@ import (
 	"flag"
 	"image/color"
 	"image/png"
+	"io/ioutil"
 	"log"
 	"os"
 
@@ -11,10 +12,20 @@ import (
 )
 
 func main() {
+	var input string
 	var themeName string
 
+	flag.StringVar(&input, "input", "-", "input string (- to read from stdin)")
 	flag.StringVar(&themeName, "theme", "rainbow", "select the color theme")
 	flag.Parse()
+
+	if input == "-" {
+		inputBytes, err := ioutil.ReadAll(os.Stdin)
+		if err != nil {
+			log.Fatal(err)
+		}
+		input = string(inputBytes)
+	}
 
 	theme, ok := themes[themeName]
 	if !ok {
@@ -24,7 +35,7 @@ func main() {
 	gridSize := 5
 	scale := 32
 
-	img := identicon.New(os.Stdin, gridSize, scale, theme)
+	img := identicon.New(input, gridSize, scale, theme)
 	err := png.Encode(os.Stdout, img)
 	if err != nil {
 		log.Fatal(err)

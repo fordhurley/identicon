@@ -5,21 +5,18 @@ import (
 	"image"
 	"image/color"
 	"image/draw"
-	"io"
 )
 
 // New generates an identicon image. gridSize is the number of grid cells
 // horizontally and vertically. scale multiplies the gridSize to size the image
 // in pixels. The final image will be [gridSize*scale x gridSize*scale]
-func New(r io.Reader, gridSize int, scale int, palettes []color.Palette) image.Image {
-	hash := sha256.New()
-	_, err := io.Copy(hash, r)
-	if err != nil {
-		panic(err)
-	}
+func New(input string, gridSize int, scale int, palettes []color.Palette) image.Image {
+	h := sha256.New()
+	h.Write([]byte(input))
+	hash := h.Sum(nil)
 
 	source := ColorSource{
-		BitSource: BitSource{bytes: hash.Sum(nil)},
+		BitSource: BitSource{bytes: hash},
 		palettes:  palettes,
 	}
 
