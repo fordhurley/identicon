@@ -49,10 +49,10 @@ var themes = map[string][]color.Palette{
 		{
 			color.RGBA{50, 178, 255, 255},
 			color.RGBA{163, 172, 177, 255},
-			color.RGBA{0, 0, 0, 255},
+			color.RGBA{15, 15, 15, 255},
 		},
 		{
-			color.RGBA{255, 255, 255, 255},
+			color.RGBA{240, 240, 240, 255},
 		},
 	},
 	"rainbow": []color.Palette{
